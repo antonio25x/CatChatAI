@@ -6,13 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Cat, Send, Shield, Clock, Heart, Home, Star, HelpCircle, PawPrint } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ModelSelector } from "@/components/model-selector";
 
 interface Message {
   id: string;
   content: string;
   type: 'user' | 'ai';
   timestamp: Date;
+  model?: 'openai' | 'gemini';
 }
+
+type AIModel = 'openai' | 'gemini';
 
 const suggestedQuestions = [
   {
@@ -45,6 +49,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [showWelcome, setShowWelcome] = useState(true);
+  const [selectedModel, setSelectedModel] = useState<AIModel>("openai");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
