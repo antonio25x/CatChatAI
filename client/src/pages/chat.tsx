@@ -66,8 +66,8 @@ export default function ChatPage() {
   }, []);
 
   const askCatExpertMutation = useMutation({
-    mutationFn: async (question: string) => {
-      const response = await apiRequest('POST', '/api/chat', { question });
+    mutationFn: async ({ question, model }: { question: string; model: AIModel }) => {
+      const response = await apiRequest('POST', '/api/chat', { question, model });
       return response.json();
     },
     onSuccess: (data) => {
@@ -75,7 +75,8 @@ export default function ChatPage() {
         id: Date.now().toString() + '-ai',
         content: data.response,
         type: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        model: data.model
       };
       setMessages(prev => [...prev, aiMessage]);
     },
