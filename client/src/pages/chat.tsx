@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Cat, Send, Shield, Clock, Heart, Home, Star, HelpCircle, PawPrint } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Message {
   id: string;
@@ -113,7 +114,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'hsl(var(--dark-bg))' }}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md border-b" 
               style={{ 
@@ -131,9 +132,12 @@ export default function ChatPage() {
               <p className="text-xs" style={{ color: 'hsl(var(--text-secondary))' }}>Your AI Cat Expert</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>
-            <PawPrint className="text-teal-500" size={16} />
-            <span>Online</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>
+              <PawPrint className="text-teal-500" size={16} />
+              <span>Online</span>
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
