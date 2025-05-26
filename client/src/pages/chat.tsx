@@ -110,7 +110,7 @@ export default function ChatPage() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    askCatExpertMutation.mutate(inputValue);
+    askCatExpertMutation.mutate({question: inputValue, model: "gemini"});
     setInputValue("");
   };
 
