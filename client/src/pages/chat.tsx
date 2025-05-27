@@ -49,7 +49,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [showWelcome, setShowWelcome] = useState(true);
-  const [selectedModel, setSelectedModel] = useState<AIModel>("openai");
+  const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -110,13 +110,17 @@ export default function ChatPage() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    askCatExpertMutation.mutate({question: inputValue, model: "gemini"});
+    askCatExpertMutation.mutate({question: inputValue, model: selectedModel});
     setInputValue("");
   };
 
   const handleSuggestedClick = (question: string) => {
     setInputValue(question);
     inputRef.current?.focus();
+  };
+
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedModel(e.target.value as AIModel);
   };
 
   return (
@@ -143,6 +147,16 @@ export default function ChatPage() {
               <PawPrint className="text-teal-500" size={16} />
               <span>Online</span>
             </div>
+            {/* Model Selector Dropdown */}
+            <select
+              value={selectedModel}
+              onChange={handleModelChange}
+              className="ml-4 px-2 py-1 rounded border text-sm bg-background border-gray-300 focus:outline-none"
+              style={{ color: 'hsl(var(--text-primary))' }}
+            >
+              <option value="openai">ChatGPT</option>
+              <option value="gemini">Gemini</option>
+            </select>
             <ThemeToggle />
           </div>
         </div>
