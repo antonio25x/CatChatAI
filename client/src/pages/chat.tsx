@@ -67,18 +67,64 @@ export default function ChatPage() {
 
   const askCatExpertMutation = useMutation({
     mutationFn: async ({ question, model }: { question: string; model: AIModel }) => {
-      const response = await apiRequest('POST', '/api/chat', { question, model });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      const aiMessage: Message = {
-        id: Date.now().toString() + '-ai',
-        content: data.response,
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question, model }),
+      });
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader available');
+
+      const messageId = Date.now().toString() + '-ai';
+      let fullContent = '';
+      
+      // Create initial AI message
+      const initialMessage: Message = {
+        id: messageId,
+        content: '',
         type: 'ai',
         timestamp: new Date(),
-        model: data.model
+        model
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => [...prev, initialMessage]);
+
+      // Process the stream
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(5);
+            if (data === '[DONE]') break;
+
+            try {
+              const { chunk: textChunk } = JSON.parse(data);
+              fullContent += textChunk;
+              
+              // Update the message content
+              setMessages(prev => prev.map(msg => 
+                msg.id === messageId
+                  ? { ...msg, content: fullContent }
+                  : msg
+              ));
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+      return { response: fullContent, model };
+    },
+    onSuccess: () => {
+      // Success handling is now done in the streaming logic
     },
     onError: (error) => {
       const errorMessage: Message = {

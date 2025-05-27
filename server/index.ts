@@ -3,11 +3,16 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import dotenv from "dotenv";
 
-// TODO: only load local .env in development
-// in Production, use environment variables set by the hosting provider
+// Load .env.local file in development mode
+// In production, environment variables should be set by the hosting provider
 if (process.env.NODE_ENV !== "production") {
-  // in development, load the local .env file
-  dotenv.config({ path: ".env.local" });
+  const result = dotenv.config({ path: ".env.local" });
+  
+  if (result.error) {
+    console.error("Error loading .env.local file:", result.error.message);
+  } else {
+    console.log("Loaded .env.local file successfully");
+  }
 }
 
 const app = express();

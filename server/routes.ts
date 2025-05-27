@@ -10,9 +10,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
 });
 
-// Initialize Google Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "default_key");
-
 const chatRequestSchema = z.object({
   question: z.string().min(1, "Question is required").max(1000, "Question too long"),
   model: z.enum(["openai", "gemini"]).default("openai"),
@@ -25,16 +22,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { question, model } = chatRequestSchema.parse(req.body);
 
+      // Set up SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
       // Store user message
       await storage.createChatMessage({
         content: question,
         type: "user"
       });
 
-      let aiResponse: string;
+      let fullResponse = "";
 
       if (model === "gemini") {
         // Use Google Gemini
+        // Initialize Google Gemini AI
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "invalid key");
+
         const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
         
         const prompt = `You are a world-renowned cat expert with decades of experience in feline behavior, health, nutrition, and care. You provide warm, friendly, and scientifically accurate advice about cats. 
@@ -45,7 +50,14 @@ Question: ${question}`;
 
         const result = await geminiModel.generateContent(prompt);
         const response = await result.response;
-        aiResponse = response.text() || "I'm sorry, I couldn't generate a response. Please try again!";
+        const text = response.text();
+        
+        // Send chunks of the response
+        const chunks = text.match(/.{1,2}|.+$/g) || [];
+        for (const chunk of chunks) {
+          fullResponse += chunk;
+          res.write(`data: ${JSON.stringify({ chunk, model })}\n\n`);
+        }
       } else {
         // Use OpenAI (default)
         const prompt = `You are a world-renowned cat expert with decades of experience in feline behavior, health, nutrition, and care. You provide warm, friendly, and scientifically accurate advice about cats. 
@@ -54,7 +66,7 @@ Please answer the following question about cats with expertise, empathy, and a t
 
 Question: ${question}`;
 
-        const completion = await openai.chat.completions.create({
+        const stream = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
             {
@@ -68,18 +80,28 @@ Question: ${question}`;
           ],
           max_tokens: 500,
           temperature: 0.7,
+          stream: true,
         });
 
-        aiResponse = completion.choices[0].message.content || "I'm sorry, I couldn't generate a response. Please try again!";
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          if (content) {
+            fullResponse += content;
+            res.write(`data: ${JSON.stringify({ chunk: content, model })}\n\n`);
+          }
+        }
+
       }
 
-      // Store AI response
+      // Store the complete AI response
       await storage.createChatMessage({
-        content: aiResponse,
+        content: fullResponse,
         type: "ai"
       });
 
-      res.json({ response: aiResponse, model: model });
+      // End the stream
+      res.write(`data: [DONE]\n\n`);
+      res.end();
 
     } catch (error) {
       console.error("Error in chat endpoint:", error);
