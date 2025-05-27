@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (model === "gemini") {
         // Use Google Gemini
-        const geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
         
         const prompt = `You are a world-renowned cat expert with decades of experience in feline behavior, health, nutrition, and care. You provide warm, friendly, and scientifically accurate advice about cats. 
 
