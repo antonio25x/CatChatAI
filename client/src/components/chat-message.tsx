@@ -1,6 +1,6 @@
 import React from 'react';
 import { Cat } from 'lucide-react';
-import { FormattedAIResponse } from './formatted-ai-response';
+import { FormattedAIResponse } from '@/components/formatted-ai-response';
 
 interface Message {
   id: string;
