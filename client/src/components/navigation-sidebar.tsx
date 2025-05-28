@@ -9,6 +9,7 @@ import {
   MessageSquare,
   History,
   HelpCircle,
+  LucideIcon
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
@@ -18,7 +19,7 @@ interface NavigationSidebarProps {
 }
 
 interface NavItem {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   label: string;
   href: string;
 }
