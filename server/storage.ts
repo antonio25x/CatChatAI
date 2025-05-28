@@ -6,6 +6,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(limit?: number): Promise<ChatMessage[]>;
+  clearChatMessages(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -51,9 +52,12 @@ export class MemStorage implements IStorage {
 
   async getChatMessages(limit: number = 50): Promise<ChatMessage[]> {
     const messages = Array.from(this.chatMessages.values());
-    return messages
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      .slice(-limit);
+    messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return limit ? messages.slice(-limit) : messages;
+  }
+
+  async clearChatMessages(): Promise<void> {
+    this.chatMessages.clear();
   }
 }
 

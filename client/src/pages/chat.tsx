@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Cat, Send, Shield, Clock, Heart, Home, Star, HelpCircle, PawPrint } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ModelSelector } from "@/components/model-selector";
+import { ChatMessage } from "@/components/chat-message";
 
 interface Message {
   id: string;
@@ -45,13 +45,50 @@ const suggestedQuestions = [
   }
 ];
 
+const formatTimestamp = (date: Date) => {
+  const now = new Date();
+  const messageDate = new Date(date);
+  
+  if (now.toDateString() === messageDate.toDateString()) {
+    return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  return messageDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + 
+         messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const MessageTimestamp = ({ date }: { date: Date }) => (
+  <span className="text-xs opacity-50" style={{ color: 'hsl(var(--text-secondary))' }}>
+    {formatTimestamp(date)}
+  </span>
+);
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [showWelcome, setShowWelcome] = useState(true);
   const [selectedModel, setSelectedModel] = useState<AIModel>("gemini");
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load chat history
+  useEffect(() => {
+    async function loadChatHistory() {
+      try {
+        const response = await fetch('/api/chat/history');
+        const data = await response.json();
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages);
+          setShowWelcome(false);
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    }
+    loadChatHistory();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -170,59 +207,55 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md border-b" 
-              style={{ 
-                backgroundColor: 'hsla(var(--dark-bg), 0.9)', 
-                borderColor: 'hsl(var(--dark-tertiary))' 
-              }}>
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                 style={{ background: 'linear-gradient(135deg, hsl(var(--teal-accent)), hsl(var(--purple-accent)))' }}>
-              <Cat className="text-white" size={20} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold gradient-text">CatGPT</h1>
-              <p className="text-xs" style={{ color: 'hsl(var(--text-secondary))' }}>Your AI Cat Expert</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>
-              <PawPrint className="text-teal-500" size={16} />
-              <span>Online</span>
-            </div>
-            {/* Model Selector Dropdown */}
-            <select
-              value={selectedModel}
-              onChange={handleModelChange}
-              className="ml-4 px-2 py-1 rounded border text-sm bg-background border-gray-300 focus:outline-none"
-              style={{ color: 'hsl(var(--text-primary))' }}
-            >
-              <option value="openai">ChatGPT</option>
-              <option value="gemini">Gemini</option>
-            </select>
-            <ThemeToggle />
-          </div>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Top Bar */}
+      <div className="flex items-center justify-end gap-3 p-4 border-b border-border bg-background/50 backdrop-blur-sm">
+        <div className="flex items-center space-x-2 text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>
+          <PawPrint className="text-teal-500" size={16} />
+          <span>Online</span>
         </div>
-      </header>
+        {messages.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-sm"
+            onClick={() => {
+              if (window.confirm('Are you sure you want to clear your chat history?')) {
+                setMessages([]);
+                setShowWelcome(true);
+                fetch('/api/chat/clear', { method: 'POST' });
+              }
+            }}
+          >
+            Clear History
+          </Button>
+        )}
+        <select
+          value={selectedModel}
+          onChange={handleModelChange}
+          className="px-2 py-1 rounded border text-sm bg-background border-gray-300 focus:outline-none"
+          style={{ color: 'hsl(var(--text-primary))' }}
+        >
+          <option value="openai">ChatGPT</option>
+          <option value="gemini">Gemini</option>
+        </select>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6 min-h-screen flex flex-col">
-        
+      <main className="flex-1 overflow-hidden flex flex-col relative">
         {/* Welcome Section */}
         {showWelcome && (
-          <div className="flex-1 flex flex-col justify-center items-center text-center mb-8">
-            <div className="mb-8">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Ask the <span className="gradient-text">Cat Expert</span>
-              </h2>
-              <p className="text-lg md:text-xl max-w-2xl" style={{ color: 'hsl(var(--text-secondary))' }}>
-                Get expert advice on cat behavior, health, nutrition, and more from our AI-powered feline specialist.
-              </p>
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="min-h-full flex flex-col justify-center items-center text-center p-4">
+              <div className="mb-8">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                  Welcome to <span className="gradient-text">CatGPT</span>
+                </h2>
+                <p className="text-lg md:text-xl max-w-2xl" style={{ color: 'hsl(var(--text-secondary))' }}>
+                  Get expert advice on cat behavior, health, nutrition, and more from our AI-powered feline specialist.
+                </p>
+              </div>
             </div>
-
             {/* Suggested Questions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
               {suggestedQuestions.map((item, index) => {
@@ -260,59 +293,51 @@ export default function ChatPage() {
 
         {/* Chat Messages */}
         {!showWelcome && (
-          <div className="flex-1 mb-6">
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-4 max-w-md md:max-w-lg ${
-                    message.type === 'user' ? 'chat-bubble-user text-white' : 'chat-bubble-ai'
-                  }`}>
-                    {message.type === 'user' ? (
-                      <p>{message.content}</p>
-                    ) : (
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                             style={{ background: 'linear-gradient(135deg, hsl(var(--teal-accent)), hsl(var(--purple-accent)))' }}>
-                          <Cat className="text-white" size={16} />
-                        </div>
-                        <div className="flex-1">
-                          {/* Format all AI responses as Markdown safely */}
-                          <FormattedAIResponse content={message.content} />
-                        </div>
-                      </div>
-                    )}
+          <div className="absolute inset-0 flex flex-col">
+            {isLoadingHistory ? (
+              <div className="flex-1 flex justify-center items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-paw-tap">
+                    <PawPrint className="text-teal-500" size={24} />
                   </div>
+                  <span style={{ color: 'hsl(var(--text-secondary))' }}>Loading your chat history...</span>
                 </div>
-              ))}
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
 
-              {/* Loading Indicator */}
-              {askCatExpertMutation.isPending && (
-                <div className="flex justify-start">
-                  <div className="chat-bubble-ai p-4 max-w-xs">
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-paw-tap">
-                        <PawPrint className="text-teal-500" size={16} />
-                      </div>
-                      <span style={{ color: 'hsl(var(--text-secondary))' }}>The cat is thinking</span>
-                      <div className="flex space-x-1">
-                        <div className="w-1 h-1 rounded-full animate-bounce bg-teal-500"></div>
-                        <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-200 bg-teal-500"></div>
-                        <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-400 bg-teal-500"></div>
+                {/* Loading Indicator */}
+                {askCatExpertMutation.isPending && (
+                  <div className="flex justify-start">
+                    <div className="chat-bubble-ai p-4 max-w-xs">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-paw-tap">
+                          <PawPrint className="text-teal-500" size={16} />
+                        </div>
+                        <span style={{ color: 'hsl(var(--text-secondary))' }}>The cat is thinking</span>
+                        <div className="flex space-x-1">
+                          <div className="w-1 h-1 rounded-full animate-bounce bg-teal-500"></div>
+                          <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-200 bg-teal-500"></div>
+                          <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-400 bg-teal-500"></div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div ref={messagesEndRef} />
-            </div>
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
         )}
 
         {/* Input Section */}
-        <div className="sticky bottom-0 pt-4 pb-4 backdrop-blur-md"
+        <div className="p-4 backdrop-blur-md border-t border-border"
              style={{ backgroundColor: 'hsla(var(--dark-bg), 0.9)' }}>
-          <form onSubmit={handleSubmit} className="flex space-x-3">
+          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
             <div className="flex-1 relative">
               <Input
                 ref={inputRef}

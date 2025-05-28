@@ -126,7 +126,7 @@ Question: ${question}`;
     }
   });
 
-  // Get chat history endpoint (optional)
+  // Get chat history endpoint
   app.get("/api/chat/history", async (req, res) => {
     try {
       const messages = await storage.getChatMessages(50);
@@ -134,6 +134,28 @@ Question: ${question}`;
     } catch (error) {
       console.error("Error fetching chat history:", error);
       res.status(500).json({ message: "Failed to fetch chat history" });
+    }
+  });
+
+  // Clear chat history endpoint
+  app.post("/api/chat/clear", async (req, res) => {
+    try {
+      await storage.clearChatMessages();
+      res.json({ message: "Chat history cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ message: "Failed to clear chat history" });
+    }
+  });
+
+  // Clear chat history endpoint
+  app.post("/api/chat/clear", async (req, res) => {
+    try {
+      await storage.clearChatMessages();
+      res.json({ message: "Chat history cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ message: "Failed to clear chat history" });
     }
   });
 
