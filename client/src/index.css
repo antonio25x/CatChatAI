@@ -121,3 +121,56 @@
     animation-delay: 0.4s;
   }
 }
+
+@layer components {
+  .chat-bubble-user {
+    @apply bg-gradient-to-br from-teal-500 to-purple-500 rounded-2xl rounded-tr-sm;
+    animation: bubbleIn 0.3s ease-out;
+  }
+
+  .chat-bubble-ai {
+    @apply bg-muted/50 backdrop-blur-sm rounded-2xl rounded-tl-sm;
+    animation: bubbleIn 0.3s ease-out;
+  }
+}
+
+@keyframes bubbleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Typewriter cursor animation */
+.typewriter::after {
+  content: '▌';
+  display: inline-block;
+  color: hsl(var(--text-primary));
+  animation: cursor 0.8s infinite;
+}
+
+@keyframes cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Code block styles */
+pre {
+  position: relative;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+pre code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}

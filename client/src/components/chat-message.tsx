@@ -23,10 +23,14 @@ const formatTimestamp = (date: Date) => {
 
 export const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
   return (
-    <div className={`flex flex-col ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
-      <div className={`p-4 max-w-md md:max-w-lg ${
-        message.type === 'user' ? 'chat-bubble-user text-white' : 'chat-bubble-ai'
-      }`}>
+    <div 
+      className={`flex flex-col animate-slide-up ${message.type === 'user' ? 'items-end' : 'items-start'}`}
+    >
+      <div 
+        className={`p-4 max-w-md md:max-w-lg shadow-lg ${
+          message.type === 'user' ? 'chat-bubble-user text-white' : 'chat-bubble-ai'
+        }`}
+      >
         {message.type === 'user' ? (
           <p>{message.content}</p>
         ) : (
