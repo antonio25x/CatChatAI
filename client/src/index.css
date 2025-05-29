@@ -120,6 +120,22 @@
     animation: bounce 1s infinite;
     animation-delay: 0.4s;
   }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .animate-blink-cursor {
+    position: relative;
+  }
+
+  .animate-blink-cursor::after {
+    content: '|';
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+    color: hsl(var(--primary));
+  }
 }
 
 @layer components {
