@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -28,7 +29,7 @@ const navigationItems: NavItem[] = [
   {
     icon: MessageSquare,
     label: "Chat",
-    href: "/",
+    href: "/chat",
   },
   {
     icon: History,
@@ -48,6 +49,8 @@ const navigationItems: NavItem[] = [
 ];
 
 export function NavigationSidebar({ isExpanded, onToggle }: NavigationSidebarProps) {
+  const [location, setLocation] = useLocation();
+
   return (
     <div
       className={cn(
@@ -56,7 +59,10 @@ export function NavigationSidebar({ isExpanded, onToggle }: NavigationSidebarPro
       )}
     >
       {/* Logo Section */}
-      <div className="p-4 flex items-center gap-3">
+      <button 
+        onClick={() => setLocation("/")}
+        className="p-4 flex items-center gap-3 hover:opacity-80 transition-opacity"
+      >
         <div className="w-8 h-8 rounded-full flex items-center justify-center"
              style={{ background: 'linear-gradient(135deg, hsl(var(--teal-accent)), hsl(var(--purple-accent)))' }}>
           <Cat className="text-white" size={16} />
@@ -67,7 +73,7 @@ export function NavigationSidebar({ isExpanded, onToggle }: NavigationSidebarPro
         )}>
           CatGPT
         </span>
-      </div>
+      </button>
 
       {/* Navigation Items */}
       <nav className="flex-1 px-2 py-4">
@@ -79,8 +85,10 @@ export function NavigationSidebar({ isExpanded, onToggle }: NavigationSidebarPro
                   variant="ghost"
                   className={cn(
                     "w-full mb-2 justify-start",
-                    !isExpanded && "justify-center"
+                    !isExpanded && "justify-center",
+                    location === item.href && "bg-primary/10"
                   )}
+                  onClick={() => setLocation(item.href)}
                 >
                   <item.icon size={20} className={cn(
                     "min-w-[20px]",
