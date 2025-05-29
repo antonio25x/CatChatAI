@@ -207,7 +207,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col">
       {/* Top Bar */}
       <div className="flex items-center justify-end gap-3 p-4 border-b border-border bg-background/50 backdrop-blur-sm">
         <div className="flex items-center space-x-2 text-sm" style={{ color: 'hsl(var(--text-secondary))' }}>
@@ -241,11 +241,11 @@ export default function ChatPage() {
         </select>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden flex flex-col relative">
-        {/* Welcome Section */}
-        {showWelcome && (
-          <div className="absolute inset-0 overflow-y-auto">
+      {/* Main Content Area with Messages */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Scrollable Message Container */}
+        <div className="flex-1 overflow-y-auto">
+          {showWelcome ? (
             <div className="min-h-full flex flex-col justify-center items-center text-center p-4">
               <div className="mb-8">
                 <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -255,88 +255,84 @@ export default function ChatPage() {
                   Get expert advice on cat behavior, health, nutrition, and more from our AI-powered feline specialist.
                 </p>
               </div>
-            </div>
-            {/* Suggested Questions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
-              {suggestedQuestions.map((item, index) => {
-                const IconComponent = item.icon;
-                return (
-                  <Card
-                    key={index}
-                    className="p-4 cursor-pointer transition-all duration-200 hover:scale-105 group border"
-                    style={{ 
-                      backgroundColor: 'hsl(var(--dark-secondary))',
-                      borderColor: 'hsl(var(--dark-tertiary))',
-                    }}
-                    onClick={() => handleSuggestedClick(item.question)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <IconComponent 
-                        className={`mt-1 group-hover:scale-110 transition-transform ${item.color}`} 
-                        size={20} 
-                      />
-                      <div>
-                        <h3 className="font-medium text-sm mb-1" style={{ color: 'hsl(var(--text-primary))' }}>
-                          {item.category}
-                        </h3>
-                        <p className="text-xs" style={{ color: 'hsl(var(--text-secondary))' }}>
-                          {item.question}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* Chat Messages */}
-        {!showWelcome && (
-          <div className="absolute inset-0 flex flex-col">
-            {isLoadingHistory ? (
-              <div className="flex-1 flex justify-center items-center">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-paw-tap">
-                    <PawPrint className="text-teal-500" size={24} />
+              {/* Suggested Questions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
+                {suggestedQuestions.map((item, index) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <Card
+                      key={index}
+                      className="p-4 cursor-pointer transition-all duration-200 hover:scale-105 group border"
+                      style={{ 
+                        backgroundColor: 'hsl(var(--dark-secondary))',
+                        borderColor: 'hsl(var(--dark-tertiary))',
+                      }}
+                      onClick={() => handleSuggestedClick(item.question)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <IconComponent 
+                          className={`mt-1 group-hover:scale-110 transition-transform ${item.color}`} 
+                          size={20} 
+                        />
+                        <div>
+                          <h3 className="font-medium text-sm mb-1" style={{ color: 'hsl(var(--text-primary))' }}>
+                            {item.category}
+                          </h3>
+                          <p className="text-xs" style={{ color: 'hsl(var(--text-secondary))' }}>
+                            {item.question}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 p-4 space-y-6">
+              {isLoadingHistory ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-paw-tap">
+                      <PawPrint className="text-teal-500" size={24} />
+                    </div>
+                    <span style={{ color: 'hsl(var(--text-secondary))' }}>Loading your chat history...</span>
                   </div>
-                  <span style={{ color: 'hsl(var(--text-secondary))' }}>Loading your chat history...</span>
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
-                ))}
+              ) : (
+                <>
+                  {messages.map((message) => (
+                    <ChatMessage key={message.id} message={message} />
+                  ))}
 
-                {/* Loading Indicator */}
-                {askCatExpertMutation.isPending && (
-                  <div className="flex justify-start">
-                    <div className="chat-bubble-ai p-4 max-w-xs">
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-paw-tap">
-                          <PawPrint className="text-teal-500" size={16} />
-                        </div>
-                        <span style={{ color: 'hsl(var(--text-secondary))' }}>The cat is thinking</span>
-                        <div className="flex space-x-1">
-                          <div className="w-1 h-1 rounded-full animate-bounce bg-teal-500"></div>
-                          <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-200 bg-teal-500"></div>
-                          <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-400 bg-teal-500"></div>
+                  {/* Loading Indicator */}
+                  {askCatExpertMutation.isPending && (
+                    <div className="flex justify-start">
+                      <div className="chat-bubble-ai p-4 max-w-xs">
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-paw-tap">
+                            <PawPrint className="text-teal-500" size={16} />
+                          </div>
+                          <span style={{ color: 'hsl(var(--text-secondary))' }}>The cat is thinking</span>
+                          <div className="flex space-x-1">
+                            <div className="w-1 h-1 rounded-full animate-bounce bg-teal-500"></div>
+                            <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-200 bg-teal-500"></div>
+                            <div className="w-1 h-1 rounded-full animate-bounce animate-bounce-delay-400 bg-teal-500"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Input Section */}
-        <div className="p-4 backdrop-blur-md border-t border-border"
-             style={{ backgroundColor: 'hsla(var(--dark-bg), 0.9)' }}>
+        {/* Input Area - Fixed at Bottom */}
+        <div className="shrink-0 p-4 bg-background/80 backdrop-blur-md border-t border-border">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
             <div className="flex-1 relative">
               <Input
@@ -382,7 +378,7 @@ export default function ChatPage() {
             <span>Press Enter to send</span>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
